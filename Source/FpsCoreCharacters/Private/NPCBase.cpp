@@ -6,8 +6,6 @@
 // Sets default values
 ANPCBase::ANPCBase()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 
 }
 
@@ -18,12 +16,6 @@ void ANPCBase::BeginPlay()
 	
 }
 
-// Called every frame
-void ANPCBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 // Called to bind functionality to input
 void ANPCBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

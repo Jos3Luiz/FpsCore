@@ -88,9 +88,12 @@ void AFirearm::ReloadWeapon()
 	int Needed= FMath::Clamp(MaxAmmo - CurrentAmmo,0,MaxAmmo);
 	CurrentAmmo+=Needed;
 	CurrentStockAmmo-=Needed;
-	OnAmmoChangedEvent.Broadcast(CurrentAmmo,CurrentStockAmmo);
 }
 
+bool AFirearm::CanReloadWeapon()
+{
+	return (CurrentAmmo < MaxAmmo) && (CurrentStockAmmo > 0);
+}
 
 
 void AFirearm::SetRecoilY()
@@ -165,9 +168,9 @@ void AFirearm::Destroyed()
 	}
 }
 
-void AFirearm::SetWeaponVisibilityCallback(bool Val)
+void AFirearm::SetWeaponVisibility(bool Val)
 {
-	Super::SetWeaponVisibilityCallback(Val);
+	Super::SetWeaponVisibility(Val);
 	for (AAttachmentBase *AttachmentRef : AttachmentRefList)
 	{
 		if(AttachmentRef)

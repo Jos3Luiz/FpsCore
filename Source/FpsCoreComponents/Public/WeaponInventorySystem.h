@@ -22,14 +22,30 @@ public:
 	UWeaponInventorySystem();
 	void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
-	UFUNCTION(BlueprintCallable,BlueprintPure)
-    AWeaponBase *GetCurrentWeapon();
+	//handles the right click shoot button and shoots from the current weapon
+	UFUNCTION(BlueprintCallable)
+	void Shoot();
+
+	//actually reload weapon. Careful to not confuse with the reloading animation.
+	UFUNCTION(BlueprintCallable)
+	void Reload();
+
+	//actually reload weapon. Careful to not confuse with the reloading animation.
+	UFUNCTION(BlueprintCallable)
+    bool CanReload();
+
+	//handles DumpWeapon from inventory action
+	UFUNCTION(BlueprintCallable)
+    void DumpWeapon();
 	
 	UFUNCTION(BlueprintCallable)
-	void ChangeCurrentWeaponIndex(uint8 Slot);
+	void ChangeCurrentWeaponIndex(int Slot);
 	
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void AddWeaponToInventory(AWeaponBase *NewWeapon);
+
+	UFUNCTION(Server,Reliable,BlueprintCallable)
+    void RemoveWeaponFromInventory(int Slot);
 
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void ReplaceWeaponToInventory(AWeaponBase *NewWeapon);
@@ -41,30 +57,30 @@ public:
 
 protected:
 
-
-	//called when scrolling from inputs
-	UFUNCTION(Server,Reliable,BlueprintCallable)
-    void ChangeCurrentWeaponIndexServer(uint8 Slot);
 	
-	UPROPERTY(ReplicatedUsing=RepNotifyInventoryChanged)
+	UPROPERTY(ReplicatedUsing=RepNotifyWeaponIndexChanged)
 	TArray<AWeaponBase *> WeaponsRef;
-	UFUNCTION()
-    void RepNotifyInventoryChanged();
 
 	//treated as input therefore not replicated back to owner
 	UPROPERTY(ReplicatedUsing=RepNotifyWeaponIndexChanged)
-	uint8 CurrentWeaponIndex;
+	int CurrentWeaponIndex;
+	
 	UFUNCTION()
     void RepNotifyWeaponIndexChanged();
 
-	//broadcasts the last level OnAmmoChangeEvent, implementing a delegate for the whole inventory ammo change.
-	void BroadcastAmmoChange(int CurrentAmmo,int CurrentStockAmmo);
-
-	
-	
+	//multiyplayer stuff
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 	virtual bool IsSupportedForNetworking() const override;
 
+private:
+	void BroadcastAmmo();
+	void UpdateVisibility();
+	
+	//called on server when scrolling from weapons in inventory
+	UFUNCTION(Server,Reliable,BlueprintCallable)
+    void ChangeCurrentWeaponIndexServer(int Slot);
+	
+	AWeaponBase *GetCurrentWeapon();
 	
 	
 	

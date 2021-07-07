@@ -10,12 +10,10 @@ UCLASS(Abstract)
 class FPSCOREINTERACTABLES_API AInteractableBase : public AActor
 {
 	GENERATED_BODY()
-	
 public:	
-	// Sets default values for this actor's properties
-	AInteractableBase();
-
-	virtual void OnInteract() PURE_VIRTUAL(AInteractableBase::OnInteract,);
+	virtual void Interact(){};;
+	virtual void EnableOutline(){};
+	virtual void DisableOutline(){};;
 
 
 

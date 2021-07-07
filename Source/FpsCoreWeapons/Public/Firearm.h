@@ -84,9 +84,11 @@ protected:
 
 	virtual void ServerShootLogic(AActor *AInstigator,FVector Start,FVector Direction) override;
 
-	virtual void SetWeaponVisibilityCallback(bool Val) override;
+	virtual void SetWeaponVisibility(bool Val) override;
 
 	virtual void Shoot(AActor* AInstigator) override;
+
+	virtual bool CanReloadWeapon() override;
 
 	
 private:

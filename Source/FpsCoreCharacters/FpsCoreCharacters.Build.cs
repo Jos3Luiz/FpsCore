@@ -11,9 +11,10 @@ public class FpsCoreCharacters : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "HeadMountedDisplay",
+            "AIModule",
             "NavigationSystem",
             "AIModule",
+            "FpsCoreInteractables",
             "FpsCoreWeapons",
             "FpsCoreComponents",
             "FpsCore"

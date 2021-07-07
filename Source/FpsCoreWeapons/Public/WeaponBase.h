@@ -20,22 +20,18 @@ public:
     virtual void Shoot(AActor* AInstigator);
 	
 	//when player reloads weapon
-	UFUNCTION(BlueprintCallable)
     virtual void ReloadWeapon(){}
 
-	//tells the character if it's able to reload. This avoids playing the animation with the weapon full
-    virtual bool CanReload();
+	virtual bool CanReloadWeapon();
 
 	FName GetSocketName();
 
 	//Requests to change visibility for the weapon
-	void ChangeWeaponVisibility(bool Val);
+	virtual void SetWeaponVisibility(bool Val);
 
-	UFUNCTION(BlueprintCallable)
 	bool IsOnCooldown();
 
-	UFUNCTION(BlueprintCallable,BlueprintPure)
-	const int GetWeaponCost();
+	void GetAmmoStatus(int &CurrentAmmoOut,int &CurrentStockAmmoOut);
 	
 protected:
 	
@@ -63,7 +59,6 @@ protected:
 	//current ammo in the "inventory"
 	UPROPERTY(EditAnywhere)
 	int CurrentStockAmmo=1;
-	
 
 	//socket expected to be used on the character.WeaponSocket by default. Change to melee socket if needed for example.
 	UPROPERTY(EditAnywhere)
@@ -79,40 +74,20 @@ protected:
 	virtual void ServerShootLogic(AActor *AInstigator,FVector Start,FVector Direction)
 	PURE_VIRTUAL(AWeaponBase::ServerShootLogic);
 
-	UFUNCTION(BlueprintCallable)
-	virtual void SetWeaponVisibilityCallback(bool Val);
-
-	
 	UFUNCTION(Server,Reliable)
 	void ServerSideShoot(AActor *AInstigator,FVector Start,FVector Direction);
 
 	UFUNCTION(NetMulticast,Unreliable)
     void ClientSideShoot(AActor *AInstigator,FVector Start,FVector Direction);
 
-
-	
-	//drops  WeaponVisibility to replicating back to owner
-	//virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
-
-	//true
+	//always true
 	virtual bool IsSupportedForNetworking() const override;
 	
 private:
 
-	
-	
-	/*UFUNCTION()
-	void RepNotifyOnVisibilityChanged(bool Val);
-
-	UFUNCTION(Server,Reliable)
-	void ServerSideSetWeaponVisibility(bool Val);*/
-	
 	void ResetCooldown();
 	
 	float FireTime;
-
-	//UPROPERTY(ReplicatedUsing=RepNotifyOnVisibilityChanged)
-	//bool WeaponVisibility;
 
 	bool IsCooldown=false;
 
