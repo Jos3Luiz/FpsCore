@@ -7,6 +7,8 @@
 UWeaponInventorySystem::UWeaponInventorySystem()
 {
 	SetIsReplicatedByDefault(true);
+	WeaponsRef.SetNum(MaxSlots);
+	WeaponsRefShadow.SetNum(MaxSlots);
 }
 
 
@@ -16,7 +18,11 @@ void UWeaponInventorySystem::OnComponentDestroyed(bool bDestroyingHierarchy)
 	Super::OnComponentDestroyed(bDestroyingHierarchy);
 	for(auto weaponptr: WeaponsRef)
 	{
-		weaponptr->Destroy();
+		if (weaponptr)
+		{
+			weaponptr->Destroy();	
+		}
+		
 	}
 }
 
@@ -57,7 +63,7 @@ bool UWeaponInventorySystem::CanReload()
 void UWeaponInventorySystem::DumpWeapon()
 {
 	
-	ChangeCurrentWeaponIndex(FMath::Clamp(CurrentWeaponIndex,0, WeaponsRef.Num()-1));
+	ChangeCurrentWeaponIndex(FMath::Clamp(CurrentWeaponIndex+1,0, WeaponsRef.Num()-1));
 	RemoveWeaponFromInventory(CurrentWeaponIndex);
 	UpdateVisibility();
 	BroadcastAmmo();
@@ -88,18 +94,27 @@ void UWeaponInventorySystem::RemoveWeaponFromInventory_Implementation(int Slot)
 {
 	if(Slot < WeaponsRef.Num())
 	{
-		WeaponsRef.RemoveAt(Slot);
+		OnWeaponRemoved.Broadcast(WeaponsRef[Slot]);
+		WeaponsRef[Slot] = nullptr;
 	}
+	
 }
 
 void UWeaponInventorySystem::ReplaceWeaponToInventory_Implementation(AWeaponBase* NewWeapon)
 {
-	if(WeaponsRef[CurrentWeaponIndex])
+	AWeaponBase *CurrWeapon = GetCurrentWeapon();
+	if (NewWeapon)
 	{
-		WeaponsRef[CurrentWeaponIndex]->SetOwner(nullptr);
+		if(CurrWeapon)
+		{
+			CurrWeapon->SetOwner(nullptr);
+			OnWeaponRemoved.Broadcast(CurrWeapon);
+		}
+		NewWeapon->SetOwner(GetOwner());
+		WeaponsRef[CurrentWeaponIndex] = NewWeapon;
+		OnWeaponAdded.Broadcast(NewWeapon);
 	}
-	NewWeapon->SetOwner(GetOwner());
-	WeaponsRef[CurrentWeaponIndex] = NewWeapon;
+
 }
 
 
@@ -111,11 +126,26 @@ void UWeaponInventorySystem::ChangeCurrentWeaponIndexServer_Implementation(int S
 	}
 }
 
-void UWeaponInventorySystem::AddWeaponToInventory_Implementation(AWeaponBase* NewWeapon)
+void UWeaponInventorySystem::RepNotifyWeaponListChanged()
 {
-	NewWeapon->SetOwner(GetOwner());
-	WeaponsRef.Add(NewWeapon);
+	for(int i=0;i<MaxSlots;i++)
+	{
+		if(WeaponsRefShadow[i]!=WeaponsRef[i])
+		{
+			if(WeaponsRefShadow[i])
+			{
+				OnWeaponRemoved.Broadcast(WeaponsRefShadow[i]);
+			}
+			if(WeaponsRef[i])
+			{
+				OnWeaponAdded.Broadcast(WeaponsRef[i]);
+			}
+		}
+		WeaponsRefShadow[i] = WeaponsRef[i];
+	}
+	RepNotifyWeaponIndexChanged();
 }
+
 
 void UWeaponInventorySystem::RepNotifyWeaponIndexChanged()
 {
@@ -150,6 +180,11 @@ void UWeaponInventorySystem::UpdateVisibility()
 			}
 		}
 	}
+}
+
+int UWeaponInventorySystem::GetCurrentSlot()
+{
+	return CurrentWeaponIndex;
 }
 
 

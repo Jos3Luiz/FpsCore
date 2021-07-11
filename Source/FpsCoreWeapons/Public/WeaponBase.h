@@ -3,12 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Net/UnrealNetwork.h"
-#include "InteractableBase.h"
+#include "CollectableBase.h"
 #include "WeaponBase.generated.h"
 
 UCLASS(Abstract)
-class FPSCOREWEAPONS_API AWeaponBase : public AInteractableBase
+class FPSCOREWEAPONS_API AWeaponBase : public ACollectableBase
 {
 	GENERATED_BODY()
 	
@@ -32,7 +31,13 @@ public:
 	bool IsOnCooldown();
 
 	void GetAmmoStatus(int &CurrentAmmoOut,int &CurrentStockAmmoOut);
-	
+
+	virtual void ChangeOutline(bool Val) override;
+
+	virtual void OnRemoveFromInventory() override;
+
+	virtual void OnAddToInventory() override;
+
 protected:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)

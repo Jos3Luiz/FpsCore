@@ -11,11 +11,14 @@ class FPSCOREINTERACTABLES_API AInteractableBase : public AActor
 {
 	GENERATED_BODY()
 public:	
-	virtual void Interact(){};;
-	virtual void EnableOutline(){};
-	virtual void DisableOutline(){};;
+	virtual void Interact(AActor *AInstigator){
+		OnInteractBP(AInstigator);
+	};
+	
+	virtual void ChangeOutline(bool Val){};
 
-
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnInteractBP(AActor *AInstigator);
 
 
 };

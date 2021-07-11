@@ -20,67 +20,15 @@ AFpsPlayer::AFpsPlayer()
 	FpsSkMesh->SetupAttachment(FpsCamera);
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
-	FpsSkMesh->SetCastShadow(false);
-
+	FpsSkMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Block);
+	
 }
 
 void AFpsPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	if(!IsLocallyControlled())
-	{
-		FpsSkMesh->SetVisibility(false);
-	}
-	
-}
-void AFpsPlayer::UpdateCurrentLookingInteractable()
-{
-	AInteractableBase *Result;
-	FCollisionShape StructureCollision = FCollisionShape::MakeSphere(40.0f);
-	FVector StartTrace = FpsCamera->GetComponentLocation();
-	FVector EndTrace = (FpsCamera->GetForwardVector() * 150.0f) + StartTrace;
-	FHitResult HitResult;
-
-	if(CurrentLookingInteractable)
-	{
-		//Disable Outline if not seen
-		CurrentLookingInteractable->DisableOutline();
-		CurrentLookingInteractable = nullptr;
-	}
-	
-	//ECC_GameTraceChannel1 = interactable channel
-	bool HitSuccess = GetWorld()->SweepSingleByChannel(HitResult,EndTrace,EndTrace,FQuat::Identity,ECollisionChannel::ECC_GameTraceChannel1,StructureCollision);
-	//DrawDebugSphere(GetWorld(),EndTrace,40.0f,50,FColor::Orange,false);
-	if(HitSuccess)
-	{
-		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), HitResult.Location, 20.f, 12, FColor::Red, false, 10.f);
-		Result = Cast<AInteractableBase>(HitResult.Actor);
-		if (Result)
-		{
-			CurrentLookingInteractable = Result;
-			CurrentLookingInteractable->EnableOutline();
-		}
-	}
-}
-
-
-void AFpsPlayer::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-	UpdateCurrentLookingInteractable();
-}
-void AFpsPlayer::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-	PossessedByClientSide();
-	
-}
-
-void AFpsPlayer::PossessedByClientSide_Implementation()
-{
-	//disables the default mesh if in fps mode
-	GetMesh()->SetVisibility(false);	
-	FpsSkMesh->SetVisibility(true);
+	WeaponInventory->OnWeaponAdded.AddDynamic(this,&AFpsPlayer::BindWeaponToHand);
+	WeaponInventory->OnWeaponRemoved.AddDynamic(this,&AFpsPlayer::UnBindWeaponToHand);
 	
 }
 
@@ -92,6 +40,7 @@ void AFpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("Aim",IE_Pressed,this,&AFpsPlayer::ZoomInAds);
 	PlayerInputComponent->BindAction("Aim",IE_Released,this,&AFpsPlayer::ZoomOutAds);
 	PlayerInputComponent->BindAction("Interact",IE_Pressed,this,&AFpsPlayer::Interact);
+	PlayerInputComponent->BindAction("DropWeapon",IE_Pressed,this,&AFpsPlayer::DropWeapon);
 	
 	//movement basic
 	PlayerInputComponent->BindAxis("MoveForward",this,&AFpsPlayer::HandleMovementAxisForward);
@@ -113,6 +62,60 @@ void AFpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("Weapon3",IE_Pressed,this,&AFpsPlayer::HandleChangeToWeaponThree);
 	PlayerInputComponent->BindAction("Weapon4",IE_Pressed,this,&AFpsPlayer::HandleChangeToWeaponFour);
 }
+
+void AFpsPlayer::UpdateCurrentLookingInteractable()
+{
+	AInteractableBase *Result;
+	FCollisionShape StructureCollision = FCollisionShape::MakeSphere(40.0f);
+	FVector StartTrace = FpsCamera->GetComponentLocation();
+	FVector EndTrace = (FpsCamera->GetForwardVector() * 150.0f) + StartTrace;
+	FHitResult HitResult;
+
+	if(CurrentLookingInteractable)
+	{
+		//Disable Outline if not seen
+		CurrentLookingInteractable->ChangeOutline(false);
+		CurrentLookingInteractable = nullptr;
+	}
+	
+	//ECC_GameTraceChannel1 = interactable channel
+	bool HitSuccess = GetWorld()->SweepSingleByChannel(HitResult,EndTrace,EndTrace,FQuat::Identity,ECollisionChannel::ECC_GameTraceChannel1,StructureCollision);
+	DrawDebugSphere(GetWorld(),EndTrace,40.0f,50,FColor::Orange,false);
+	if(HitSuccess)
+	{
+		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), HitResult.Location, 20.f, 12, FColor::Red, false, 10.f);
+		Result = Cast<AInteractableBase>(HitResult.Actor);
+		if (Result)
+		{
+			CurrentLookingInteractable = Result;
+			CurrentLookingInteractable->ChangeOutline(true);
+		}
+	}
+}
+
+
+void AFpsPlayer::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	UpdateCurrentLookingInteractable();
+}
+
+void AFpsPlayer::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	PossessedByClientSide();
+	
+}
+
+void AFpsPlayer::PossessedByClientSide_Implementation()
+{
+	//disables the default mesh if in fps mode
+	FpsSkMesh->SetSkeletalMesh(FpsSkReplace);
+	FpsSkMesh->SetAnimInstanceClass(FpsAnimBpReplace->GeneratedClass);
+	FpsSkMesh->SetCastShadow(false);
+	
+}
+
 
 void AFpsPlayer::SprintPressed()
 {
@@ -151,8 +154,6 @@ void AFpsPlayer::MayInterruptAnim()
 
 }
 
-
-
 void AFpsPlayer::HandleChangeToWeaponOne()
 {
 	ChangeCurrentWeapon(0);
@@ -175,21 +176,55 @@ void AFpsPlayer::HandleChangeToWeaponFour()
 
 void AFpsPlayer::ZoomInAds()
 {
-	
+	SetCurrentPose(EAnimEnumPose::AEP_AimDownSights);
 }
 
 void AFpsPlayer::ZoomOutAds()
 {
-	
+	SetCurrentPose(EAnimEnumPose::AEP_Idle);
 }
 
 void AFpsPlayer::Interact()
 {
 	if(CurrentLookingInteractable)
 	{
-		CurrentLookingInteractable->Interact();
+		CurrentLookingInteractable->Interact(this);
+	}
+	//if is a weapon, collect it
+	AWeaponBase *WeaponToCollect = Cast<AWeaponBase>(CurrentLookingInteractable);
+	if(WeaponToCollect)
+	{
+		WeaponInventory->ReplaceWeaponToInventory(WeaponToCollect);
 	}
 }
+
+void AFpsPlayer::DropWeapon()
+{
+	WeaponInventory->RemoveWeaponFromInventory(WeaponInventory->GetCurrentSlot());
+}
+
+void AFpsPlayer::BindWeaponToHand(AWeaponBase *WeaponToCollect)
+{
+	if(WeaponToCollect)
+	{
+		WeaponToCollect->OnAddToInventory();	
+		WeaponToCollect->AttachToComponent(FpsSkMesh,FAttachmentTransformRules::SnapToTargetIncludingScale,WeaponToCollect->GetSocketName());
+			
+	}
+
+}
+
+void AFpsPlayer::UnBindWeaponToHand(AWeaponBase *WeaponToRemove)
+{
+	if(WeaponToRemove)
+	{
+		WeaponToRemove->OnRemoveFromInventory();
+		WeaponToRemove->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	}
+}
+
+
+
 
 
 void AFpsPlayer::HandleMovementAxisLookUp(float Amount)

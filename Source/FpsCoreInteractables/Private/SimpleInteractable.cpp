@@ -11,21 +11,17 @@ ASimpleInteractable::ASimpleInteractable()
 	InteractableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Block);
 }
 
-void ASimpleInteractable::Interact()
+/*
+void ASimpleInteractable::Interact(AActor *AInstigator)
 {
 	OnInteractEvent.Broadcast();
 }
+*/
 
-void ASimpleInteractable::EnableOutline()
+void ASimpleInteractable::ChangeOutline(bool Val)
 {
-	InteractableMesh->SetRenderCustomDepth(true);
+	InteractableMesh->SetRenderCustomDepth(Val);
 }
-
-void ASimpleInteractable::DisableOutline()
-{
-	InteractableMesh->SetRenderCustomDepth(false);
-}
-
 
 
 

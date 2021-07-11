@@ -4,17 +4,43 @@
 #include "WeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "BulletDamageType.h"
+#include "AttachmentEnum.h"
 
 
 AFirearm::AFirearm()
 {
-	
+	AttachmentRefList.SetNum(StaticCast<int>(EAttachmentTypeEnum::AT_Max));
 }
 
 void AFirearm::BeginPlay()
 {
 	Super::BeginPlay();
-	SetupAttachments();
+	AddAttachment_Implementation(DefaultSight);
+	
+}
+
+void AFirearm::AddAttachment_Implementation(TSubclassOf<AAttachmentBase> NewAttachment)
+{
+	//check if is allowed and if isnt none
+	if (!(AttachmentAllowedList.Contains(NewAttachment) && NewAttachment) )
+	{
+		return;
+	}
+	//spawns new item
+	AAttachmentBase *Spawned =  Cast<AAttachmentBase>(GetWorld()->SpawnActor(NewAttachment));
+	int Index = static_cast<int>( Spawned->AttachmentType);
+
+	//if there was an old attachment
+	AAttachmentBase *OldAttachment = AttachmentRefList[Index];
+	if(OldAttachment)
+	{
+		GetWorld()->DestroyActor(OldAttachment);
+	}
+	
+	AttachmentRefList[Index] = Spawned;
+	//attaches new attachment into the correct socket
+	Spawned->AttachToActor(this,FAttachmentTransformRules::SnapToTargetIncludingScale,Spawned->SocketName);
+	
 }
 
 void AFirearm::Shoot(AActor* AInstigator)
@@ -139,23 +165,6 @@ void AFirearm::BackRecoil(float timelineState)
 }
 
 
-
-
-void AFirearm::SetupAttachments()
-{
-	
-	//AAttachmentBase *CurrAttachment;
-	
-	for (TSubclassOf<AAttachmentBase> DesiredAttachment : AttachmentList)
-	{
-		//fix me
-		//CurrAttachment = GetWorld()->SpawnActor<DesiredAttachment>(DesiredAttachment.Get(), FVector(), FRotator(),FActorSpawnParameters() );
-		//SightAttachment->AttachToActor(this,FAttachmentTransformRules::SnapToTargetIncludingScale,TEXT("sight"));	
-		
-	}
-
-}
-
 void AFirearm::Destroyed()
 {
 	for (AAttachmentBase *AttachmentRef : AttachmentRefList)
@@ -177,6 +186,18 @@ void AFirearm::SetWeaponVisibility(bool Val)
 		{
 			AttachmentRef->SetActorHiddenInGame(!Val);	
 		}
+	}
+}
+
+void AFirearm::GetAttachmentSightDetails(FTransform& AimPosition, float& ZoomMultiplier)
+{
+	ASightAttachment *Sight;
+	int Index = static_cast<int>(EAttachmentTypeEnum::AT_Sight);
+	Sight = Cast<ASightAttachment>(AttachmentRefList[Index]);
+	if(Sight)
+	{
+		ZoomMultiplier = Sight->ZoomMultiplier;
+		AimPosition = Sight->AttachmentMesh->GetSocketTransform("sight");
 	}
 }
 

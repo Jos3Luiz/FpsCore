@@ -19,6 +19,12 @@ public:
 	AFpsPlayer();
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(EditAnywhere)
+	USkeletalMesh *FpsSkReplace;
+
+	UPROPERTY(EditAnywhere)
+	UAnimBlueprint *FpsAnimBpReplace;
 	
 protected:
 	virtual void PossessedBy(AController* NewController) override;
@@ -63,6 +69,15 @@ protected:
 	void ZoomInAds();
 	void ZoomOutAds();
 	void Interact();
+	void DropWeapon();
+
+	UFUNCTION() //needed because of the AddDynamic
+	void BindWeaponToHand(AWeaponBase* WeaponToCollect);
+
+	UFUNCTION()//needed because of the AddDynamic
+	void UnBindWeaponToHand(AWeaponBase* WeaponToRemove);
+	
+	
 	
 	
 	

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttachmentBase.h"
+#include "AttachmentEnum.h"
 #include "SightAttachment.generated.h"
 
 /**
@@ -13,6 +14,11 @@ UCLASS(Abstract)
 class FPSCOREATTACHMENTS_API ASightAttachment : public AAttachmentBase
 {
 	GENERATED_BODY()
+	
+	ASightAttachment()
+	{
+		AttachmentType = EAttachmentTypeEnum::AT_Sight;
+	}
 public:
 
 

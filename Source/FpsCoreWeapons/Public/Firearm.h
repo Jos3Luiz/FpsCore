@@ -26,7 +26,16 @@ public:
 
 	virtual void ReloadWeapon() override;
 
+	UFUNCTION(BlueprintPure)
+	virtual void GetAttachmentSightDetails(FTransform &AimPosition,float &ZoomMultiplier);
+
 protected:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ASightAttachment> DefaultSight;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* DefaultMagazine;
+	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere)
 	float AimTime=0.1f;
 
@@ -69,13 +78,18 @@ protected:
 	UNiagaraSystem *BulletSystem;
 	
 
+
 	
 
 
 	UPROPERTY()
 	TArray<AAttachmentBase *>AttachmentRefList;
 
-	TArray<TSubclassOf<AAttachmentBase>>AttachmentList;
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<AAttachmentBase>>AttachmentAllowedList;
+
+	UFUNCTION(Server,Reliable,BlueprintCallable)
+	void AddAttachment(TSubclassOf<AAttachmentBase> NewAttachment);
 
 	//------------------------ overrides
 
@@ -91,7 +105,5 @@ protected:
 	virtual bool CanReloadWeapon() override;
 
 	
-private:
-	void SetupAttachments();
-	
+
 };

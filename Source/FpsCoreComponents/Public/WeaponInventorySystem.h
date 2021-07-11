@@ -9,6 +9,9 @@
 
 #include "WeaponInventorySystem.generated.h"
 
+//tells the owner that a weapon have been added, so it can attach it to socket
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAddedRemoved,AWeaponBase *,NewWeapon);
+
 //Interface for hud to know what to render on the screen stats such as ammo.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChange,int,CurrentAmmo,int,TotalAmmo);
 
@@ -23,27 +26,22 @@ public:
 	void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 	//handles the right click shoot button and shoots from the current weapon
-	UFUNCTION(BlueprintCallable)
 	void Shoot();
 
 	//actually reload weapon. Careful to not confuse with the reloading animation.
-	UFUNCTION(BlueprintCallable)
 	void Reload();
 
 	//actually reload weapon. Careful to not confuse with the reloading animation.
-	UFUNCTION(BlueprintCallable)
     bool CanReload();
 
 	//handles DumpWeapon from inventory action
-	UFUNCTION(BlueprintCallable)
     void DumpWeapon();
+
+	UFUNCTION(BlueprintCallable,BlueprintPure)
+	AWeaponBase *GetCurrentWeapon();
 	
-	UFUNCTION(BlueprintCallable)
 	void ChangeCurrentWeaponIndex(int Slot);
 	
-	UFUNCTION(Server,Reliable,BlueprintCallable)
-    void AddWeaponToInventory(AWeaponBase *NewWeapon);
-
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void RemoveWeaponFromInventory(int Slot);
 
@@ -53,20 +51,37 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnAmmoChange OnAmmoChangeEvent;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponAddedRemoved OnWeaponAdded;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnWeaponAddedRemoved OnWeaponRemoved;
+
+	int GetCurrentSlot();
+
 	
 
 protected:
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
+	int MaxSlots=4;
 	
-	UPROPERTY(ReplicatedUsing=RepNotifyWeaponIndexChanged)
+	UPROPERTY(ReplicatedUsing=RepNotifyWeaponListChanged)
 	TArray<AWeaponBase *> WeaponsRef;
 
-	//treated as input therefore not replicated back to owner
+	//hackish way to check if a weapon have been removed or added.
+	UPROPERTY()
+	TArray<AWeaponBase *> WeaponsRefShadow;
+
+	//treated as input therefore not replicated back to owner. Avoid using RPCs for replicating sutuff such as inventory removing itens
 	UPROPERTY(ReplicatedUsing=RepNotifyWeaponIndexChanged)
 	int CurrentWeaponIndex;
 	
 	UFUNCTION()
     void RepNotifyWeaponIndexChanged();
+
+	UFUNCTION()
+    void RepNotifyWeaponListChanged();
 
 	//multiyplayer stuff
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
@@ -80,7 +95,7 @@ private:
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void ChangeCurrentWeaponIndexServer(int Slot);
 	
-	AWeaponBase *GetCurrentWeapon();
+	
 	
 	
 	

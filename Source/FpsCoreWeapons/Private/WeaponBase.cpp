@@ -79,6 +79,23 @@ bool AWeaponBase::IsSupportedForNetworking() const
 	return true;
 }
 
+void AWeaponBase::ChangeOutline(bool Val)
+{
+	Weapon->SetRenderCustomDepth(Val);
+}
+
+void AWeaponBase::OnAddToInventory()
+{
+	Weapon->SetSimulatePhysics(false);
+	SetActorEnableCollision(false);
+}
+
+void AWeaponBase::OnRemoveFromInventory()
+{
+	Weapon->SetSimulatePhysics(true);
+	SetActorEnableCollision(true);
+}
+
 
 
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "AttachmentEnum.h"
 #include "AttachmentBase.generated.h"
 
 UCLASS(Abstract)
@@ -16,7 +17,14 @@ public:
 	AAttachmentBase();
 
 	//mesh for the attachment
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
     UStaticMeshComponent *AttachmentMesh;
+    
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
+	FName SocketName;
+    
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
+	EAttachmentTypeEnum AttachmentType;
+	
 
 };

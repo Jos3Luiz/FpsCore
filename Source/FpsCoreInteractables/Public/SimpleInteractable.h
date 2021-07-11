@@ -6,7 +6,7 @@
 #include "InteractableBase.h"
 #include "SimpleInteractable.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInteract);
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInteract);
 
 UCLASS(Abstract)
 class FPSCOREINTERACTABLES_API ASimpleInteractable : public AInteractableBase
@@ -15,12 +15,12 @@ class FPSCOREINTERACTABLES_API ASimpleInteractable : public AInteractableBase
 	ASimpleInteractable();
 	
 public:
-	virtual void Interact() override;
-	virtual void EnableOutline() override;
-	virtual void DisableOutline() override;
+	//virtual void Interact(AActor *AInstigator) override;
+	virtual void ChangeOutline(bool Val) override;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnInteract OnInteractEvent;
+
+	//UPROPERTY(BlueprintAssignable)
+	//FOnInteract OnInteractEvent;
 	
 
 protected:

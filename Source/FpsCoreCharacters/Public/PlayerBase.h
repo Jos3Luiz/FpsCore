@@ -30,10 +30,10 @@ public:
 	UFUNCTION(BlueprintCallable)
     void SetCanCharacterMove(const bool Val);
 	
-	UFUNCTION(BlueprintCallable,BlueprintPure)
+	UFUNCTION(BlueprintPure)
     FORCEINLINE bool GetCanCharacterMove();
 	
-	UFUNCTION(BlueprintCallable,BlueprintPure)
+	UFUNCTION(BlueprintPure)
     FORCEINLINE UWeaponInventorySystem *GetPlayerWeaponInventory();
 
 	//Called after RMB click
@@ -49,23 +49,23 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void Reload();
 
-	UPROPERTY(BlueprintAssignable,BlueprintCallable)
+	UPROPERTY(BlueprintAssignable)
 	FOnAnimChange OnAnimChangeEvent;
 
-	UPROPERTY(BlueprintAssignable,BlueprintCallable)
+	UPROPERTY(BlueprintAssignable)
 	FOnAnimTransientChange OnAnimTransientChangeEvent;
 
 protected:
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="HealthSystem")
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="HealthSystem")
 	UHealthSystem *HealthSystem;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Weapon Inventory")
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Weapon Inventory")
 	UWeaponInventorySystem *WeaponInventory;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="Key itens Inventory")
+	UPROPERTY(BlueprintReadOnly,EditAnywhere,Category="Key itens Inventory")
 	UInventorySystem *Inventory;
 
-	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="AI")
+	UPROPERTY(EditAnywhere,Category="AI")
 	UAIPerceptionStimuliSourceComponent *StimulusSource;
 	
 	virtual void BeginPlay() override;
