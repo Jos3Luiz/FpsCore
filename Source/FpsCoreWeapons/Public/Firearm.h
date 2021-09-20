@@ -8,6 +8,7 @@
 #include "AttachmentBase.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Components/PointLightComponent.h"
+#include "Curves/CurveVector.h"
 #include "Firearm.generated.h"
 
 /**
@@ -30,73 +31,39 @@ public:
 	virtual void GetAttachmentSightDetails(FTransform &AimPosition,float &ZoomMultiplier);
 
 protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly,Category="WeaponProperties")
 	TSubclassOf<ASightAttachment> DefaultSight;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly,Category="WeaponProperties")
 	UStaticMeshComponent* DefaultMagazine;
 	
-	UPROPERTY(BlueprintReadWrite,EditAnywhere)
-	float AimTime=0.1f;
-
-	UPROPERTY(BlueprintReadWrite,EditAnywhere)
-	float HitImpulseAmmount=400.0f;
+	UPROPERTY(EditAnywhere,Category="WeaponProperties")
+	TArray<TSubclassOf<AAttachmentBase>>AttachmentAllowedList;
 	
-	virtual void Destroyed() override;
-	
-	UFUNCTION(BlueprintImplementableEvent,BlueprintCallable)
-    void ApplyRecoil();
-
-	UFUNCTION(BlueprintCallable)
-    void SetRecoilY();
-	
-	UFUNCTION(BlueprintCallable)
-    void SetRecoilX();
-
-	UFUNCTION(BlueprintCallable)
-    void BackRecoil(float TimelineState);
-
-	UPROPERTY(BlueprintReadWrite)
-	float RecoilTotalY;
-
-	UPROPERTY(BlueprintReadWrite)
-	float RecoilTotalX;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	UStaticMeshComponent *PlanarReflex;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	UPointLightComponent *PointLight;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float RecoilMultiplierVertical=1;
-
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float RecoilMultiplierHorizontal=1;
-
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,Category="WeaponProperties")
 	UNiagaraSystem *BulletSystem;
 	
-
-
+	UPROPERTY(EditAnywhere,Category="WeaponProperties")
+	UCurveVector *RecoilCurve;
 	
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	UStaticMeshComponent *PlanarReflex;
 
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	UPointLightComponent *PointLight;
 
 	UPROPERTY()
 	TArray<AAttachmentBase *>AttachmentRefList;
-
-	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<AAttachmentBase>>AttachmentAllowedList;
 
 	UFUNCTION(Server,Reliable,BlueprintCallable)
 	void AddAttachment(TSubclassOf<AAttachmentBase> NewAttachment);
 
 	//------------------------ overrides
 
-
+	virtual void Destroyed() override;
+	
 	virtual void VisualShootLogic(AActor *AInstigator,FVector Start,FVector Direction) override;
-
-	virtual void ServerShootLogic(AActor *AInstigator,FVector Start,FVector Direction) override;
 
 	virtual void SetWeaponVisibility(bool Val) override;
 

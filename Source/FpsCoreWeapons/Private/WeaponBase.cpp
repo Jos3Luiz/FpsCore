@@ -3,6 +3,9 @@
 
 #include "WeaponBase.h"
 
+#include "BulletDamageType.h"
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 AWeaponBase::AWeaponBase()
 {
@@ -11,7 +14,8 @@ AWeaponBase::AWeaponBase()
 	SetRootComponent(Weapon);
 	bReplicates=true;
 	//Weapon->CastShadow(false);
-	FireTime = 1.0f/(RoundsPerMinute/60.0f);
+	Weapon->SetSimulatePhysics(true);
+	
 
 }
 
@@ -96,6 +100,46 @@ void AWeaponBase::OnRemoveFromInventory()
 	SetActorEnableCollision(true);
 }
 
+void AWeaponBase::ServerShootLogic(AActor* AInstigator, FVector Start, FVector Direction)
+{
+	FHitResult HitDetails = FHitResult(ForceInit);
+	FDamageEvent DamageEvent;
+	
+	FCollisionQueryParams TraceParams(FName(TEXT("DamageTrace")), false, NULL);
+	TraceParams.bReturnPhysicalMaterial = true;
+	
+	bool HitSuccess = GetWorld()->LineTraceSingleByChannel(HitDetails,Start,Start+Direction*MaxEffectiveRange,ECollisionChannel::ECC_Visibility,TraceParams);
+	
+	//DrawDebugLine(GetWorld(), start, start+direction*10000, FColor::Red, false, 5.f, ECC_WorldStatic, 1.f);
+	if (HitSuccess)
+	{
+		UGameplayStatics::ApplyPointDamage(HitDetails.Actor.Get(),WeaponDamage,Start,HitDetails,GetOwner()->GetInstigatorController(),this,WeaponDamageType);	
+	}
+}
 
 
+void AWeaponBase::VisualShootLogic(AActor* AInstigator, FVector Start, FVector Direction)
+{
+
+	FHitResult HitDetails = FHitResult(ForceInit);
+	FCollisionQueryParams TraceParams(FName(TEXT("DamageTrace")), false, NULL);
+	TraceParams.bReturnPhysicalMaterial = true;
+
+	bool HitSuccess = GetWorld()->LineTraceSingleByChannel(HitDetails,Start,Start+Direction*MaxEffectiveRange,ECollisionChannel::ECC_Visibility,TraceParams);
+	if (HitSuccess)
+	{
+		//ACharacter *DamagedActor = Cast<ACharacter>(HitDetails.Actor);
+		//spawn damage particles here
+	}
+	
+}
+
+void AWeaponBase::GetAnimationConfigs(FName& SocketNameOut, FName& IdleMontageSectionNameOut, FName& ReloadMontageSectionNameOut, float& AimTimeOut)
+{
+	SocketNameOut=SocketName;
+	IdleMontageSectionNameOut=IdleMontageSectionName;
+	ReloadMontageSectionNameOut=ReloadMontageSectionName;
+	AimTimeOut=AimTime;
+	
+}
 

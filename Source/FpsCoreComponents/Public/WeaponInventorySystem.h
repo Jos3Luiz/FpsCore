@@ -9,11 +9,10 @@
 
 #include "WeaponInventorySystem.generated.h"
 
-//tells the owner that a weapon have been added, so it can attach it to socket
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAddedRemoved,AWeaponBase *,NewWeapon);
-
 //Interface for hud to know what to render on the screen stats such as ammo.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChange,int,CurrentAmmo,int,TotalAmmo);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewWeapon,AWeaponBase *,NewWeapon);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,12 +25,12 @@ public:
 	void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
 	//handles the right click shoot button and shoots from the current weapon
-	void Shoot();
+	bool Shoot();
 
 	//actually reload weapon. Careful to not confuse with the reloading animation.
 	void Reload();
 
-	//actually reload weapon. Careful to not confuse with the reloading animation.
+	//checks if current weapon is able to reload.
     bool CanReload();
 
 	//handles DumpWeapon from inventory action
@@ -48,23 +47,26 @@ public:
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void ReplaceWeaponToInventory(AWeaponBase *NewWeapon);
 
+	//Interface for hud to know what to render on the screen stats such as ammo.
 	UPROPERTY(BlueprintAssignable)
 	FOnAmmoChange OnAmmoChangeEvent;
 
+	//tells the owner that a weapon have been added, so it can attach it to socket
 	UPROPERTY(BlueprintAssignable)
-	FOnWeaponAddedRemoved OnWeaponAdded;
+	FOnNewWeapon OnWeaponAdded;
 	
 	UPROPERTY(BlueprintAssignable)
-	FOnWeaponAddedRemoved OnWeaponRemoved;
+	FOnNewWeapon OnWeaponRemoved;
+
+	//Interface for Animation BP to switch between their modes. Broadcasted each time player presses 1,2,3,4 or reciev a new weapon
+	UPROPERTY(BlueprintAssignable)
+	FOnNewWeapon OnWeaponChanged;
 
 	int GetCurrentSlot();
 
 	
 
 protected:
-
-	UPROPERTY(EditAnywhere,BlueprintReadOnly)
-	int MaxSlots=4;
 	
 	UPROPERTY(ReplicatedUsing=RepNotifyWeaponListChanged)
 	TArray<AWeaponBase *> WeaponsRef;
@@ -73,7 +75,7 @@ protected:
 	UPROPERTY()
 	TArray<AWeaponBase *> WeaponsRefShadow;
 
-	//treated as input therefore not replicated back to owner. Avoid using RPCs for replicating sutuff such as inventory removing itens
+	//treated as input therefore not replicated back to owner. Avoid using RPCs for replicating stuff such as inventory removing itens
 	UPROPERTY(ReplicatedUsing=RepNotifyWeaponIndexChanged)
 	int CurrentWeaponIndex;
 	
@@ -94,6 +96,8 @@ private:
 	//called on server when scrolling from weapons in inventory
 	UFUNCTION(Server,Reliable,BlueprintCallable)
     void ChangeCurrentWeaponIndexServer(int Slot);
+
+	void SwitchToNextWeapon();
 	
 	
 	

@@ -1,0 +1,24 @@
+﻿# Game English translation.
+# Copyright Epic Games, Inc. All Rights Reserved.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Game\n"
+"POT-Creation-Date: 2021-07-16 06:49\n"
+"PO-Revision-Date: 2021-07-16 06:49\n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Key:	E7CD712C428D37899C8DBB8C42AE9CEC_A51AFF16A51AFF16
+#. SourceLocation:	/Game/FpsCoreContent/dialog/testDialogWave.testDialogWave
+#. InfoMetaData:	"AudioFile" : "E7CD712C428D37899C8DBB8C42AE9CEC_A51AFF16A51AFF16.wav"
+#. InfoMetaData:	"Context" : "speaker -> speaker"
+#: /Game/FpsCoreContent/dialog/testDialogWave.testDialogWave
+msgctxt "Dialogue,E7CD712C428D37899C8DBB8C42AE9CEC_A51AFF16A51AFF16"
+msgid "This is a subtitle"
+msgstr "This is a subtitle"
+

@@ -2,13 +2,13 @@
 #include "WeaponInventorySystem.h"
 
 #include "Math/UnrealMathUtility.h"
-
+#include "AmmoTypes.h"
 
 UWeaponInventorySystem::UWeaponInventorySystem()
 {
 	SetIsReplicatedByDefault(true);
-	WeaponsRef.SetNum(MaxSlots);
-	WeaponsRefShadow.SetNum(MaxSlots);
+	WeaponsRef.SetNum(EWeaponSlot::WS_Size);
+	WeaponsRefShadow.SetNum(EWeaponSlot::WS_Size);
 }
 
 
@@ -26,14 +26,24 @@ void UWeaponInventorySystem::OnComponentDestroyed(bool bDestroyingHierarchy)
 	}
 }
 
-void UWeaponInventorySystem::Shoot()
+bool UWeaponInventorySystem::Shoot()
 {
 	AWeaponBase *CurrWeapon=GetCurrentWeapon();
+	int CurrentAmmo;
+	int StockAmmo;
+	
 	if(CurrWeapon)
 	{
-		CurrWeapon->Shoot(GetOwner());
+		CurrWeapon->GetAmmoStatus(CurrentAmmo,StockAmmo);
+		if(CurrentAmmo>0)
+		{
+			CurrWeapon->Shoot(GetOwner());
+			BroadcastAmmo();
+			return true;			
+		}
 	}
-	BroadcastAmmo();
+	return false;
+	
 }
 
 void UWeaponInventorySystem::Reload()
@@ -41,7 +51,7 @@ void UWeaponInventorySystem::Reload()
 	AWeaponBase *CurrWeapon=GetCurrentWeapon();
 	if(CurrWeapon)
 	{
-		if(!CurrWeapon->CanReloadWeapon())
+		if(CurrWeapon->CanReloadWeapon())
 		{
 			CurrWeapon->ReloadWeapon();
 		}
@@ -66,7 +76,9 @@ void UWeaponInventorySystem::DumpWeapon()
 	ChangeCurrentWeaponIndex(FMath::Clamp(CurrentWeaponIndex+1,0, WeaponsRef.Num()-1));
 	RemoveWeaponFromInventory(CurrentWeaponIndex);
 	UpdateVisibility();
+	
 	BroadcastAmmo();
+	OnWeaponChanged.Broadcast(GetCurrentWeapon());
 }
 
 
@@ -81,12 +93,17 @@ AWeaponBase* UWeaponInventorySystem::GetCurrentWeapon()
 
 void UWeaponInventorySystem::ChangeCurrentWeaponIndex(int Slot)
 {
-	if (CurrentWeaponIndex < WeaponsRef.Num())
+	if (CurrentWeaponIndex < WeaponsRef.Num() && Slot!=CurrentWeaponIndex)
 	{
-		CurrentWeaponIndex = Slot;
-		BroadcastAmmo();
-		UpdateVisibility();
-		ChangeCurrentWeaponIndexServer(Slot);
+		if(WeaponsRef[Slot]!=nullptr)
+		{
+			CurrentWeaponIndex = Slot;
+			BroadcastAmmo();
+			OnWeaponChanged.Broadcast(GetCurrentWeapon());
+			UpdateVisibility();
+			ChangeCurrentWeaponIndexServer(Slot);			
+		}
+
 	}
 }
 
@@ -96,6 +113,8 @@ void UWeaponInventorySystem::RemoveWeaponFromInventory_Implementation(int Slot)
 	{
 		OnWeaponRemoved.Broadcast(WeaponsRef[Slot]);
 		WeaponsRef[Slot] = nullptr;
+		OnWeaponChanged.Broadcast(GetCurrentWeapon());
+	
 	}
 	
 }
@@ -107,12 +126,19 @@ void UWeaponInventorySystem::ReplaceWeaponToInventory_Implementation(AWeaponBase
 	{
 		if(CurrWeapon)
 		{
-			CurrWeapon->SetOwner(nullptr);
-			OnWeaponRemoved.Broadcast(CurrWeapon);
+			if(CurrWeapon->Slot==NewWeapon->Slot)
+			{
+				CurrWeapon->SetOwner(nullptr);
+				OnWeaponRemoved.Broadcast(CurrWeapon);				
+			}
+
 		}
 		NewWeapon->SetOwner(GetOwner());
-		WeaponsRef[CurrentWeaponIndex] = NewWeapon;
+		WeaponsRef[NewWeapon->Slot] = NewWeapon;
 		OnWeaponAdded.Broadcast(NewWeapon);
+		OnWeaponChanged.Broadcast(GetCurrentWeapon());
+		BroadcastAmmo();
+		ChangeCurrentWeaponIndex(NewWeapon->Slot);
 	}
 
 }
@@ -123,39 +149,48 @@ void UWeaponInventorySystem::ChangeCurrentWeaponIndexServer_Implementation(int S
 	if (CurrentWeaponIndex < WeaponsRef.Num())
 	{
 		CurrentWeaponIndex = Slot;
+		RepNotifyWeaponIndexChanged();
 	}
 }
 
 void UWeaponInventorySystem::RepNotifyWeaponListChanged()
 {
-	for(int i=0;i<MaxSlots;i++)
+	for(int i=0;i<WeaponsRef.Num();i++)
 	{
 		if(WeaponsRefShadow[i]!=WeaponsRef[i])
 		{
 			if(WeaponsRefShadow[i])
 			{
 				OnWeaponRemoved.Broadcast(WeaponsRefShadow[i]);
+				OnWeaponChanged.Broadcast(GetCurrentWeapon());
 			}
 			if(WeaponsRef[i])
 			{
 				OnWeaponAdded.Broadcast(WeaponsRef[i]);
+				OnWeaponChanged.Broadcast(GetCurrentWeapon());
+				ChangeCurrentWeaponIndex(WeaponsRef[i]->Slot);
+				
 			}
 		}
 		WeaponsRefShadow[i] = WeaponsRef[i];
 	}
+	
 	RepNotifyWeaponIndexChanged();
+	BroadcastAmmo();
 }
 
 
 void UWeaponInventorySystem::RepNotifyWeaponIndexChanged()
 {
 	BroadcastAmmo();
+	OnWeaponChanged.Broadcast(GetCurrentWeapon());
 	UpdateVisibility();
 }
 
 void UWeaponInventorySystem::BroadcastAmmo()
 {
 	int CurrAmmo,StockAmmo;
+	SwitchToNextWeapon();
 	AWeaponBase *CurrWeapon= GetCurrentWeapon();
 	if(CurrWeapon)
 	{
@@ -163,9 +198,11 @@ void UWeaponInventorySystem::BroadcastAmmo()
 		OnAmmoChangeEvent.Broadcast(CurrAmmo,StockAmmo);
 	}
 }
+
 void UWeaponInventorySystem::UpdateVisibility()
 {
 	AWeaponBase *CurrWeapon= GetCurrentWeapon();
+	BroadcastAmmo();
 	for (AWeaponBase *i : WeaponsRef)
 	{
 		if(i) //if valid ptr
@@ -187,6 +224,17 @@ int UWeaponInventorySystem::GetCurrentSlot()
 	return CurrentWeaponIndex;
 }
 
+void UWeaponInventorySystem::SwitchToNextWeapon()
+{
+	int i;
+	for(i=CurrentWeaponIndex; i<WeaponsRef.Num();i++)
+	{
+		if (!WeaponsRef[i])
+		{
+			ChangeCurrentWeaponIndex(i);
+		}
+	}
+}
 
 //------------------------------ for replication
 bool UWeaponInventorySystem::IsSupportedForNetworking() const

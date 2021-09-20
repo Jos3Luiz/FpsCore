@@ -36,7 +36,8 @@ void AFpsPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Reload",IE_Pressed,this,&APlayerBase::BeginReload);
-	PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&APlayerBase::Shoot);
+	//PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&APlayerBase::Shoot);
+	PlayerInputComponent->BindAxis("FireHold",this,&AFpsPlayer::FireHold);
 	PlayerInputComponent->BindAction("Aim",IE_Pressed,this,&AFpsPlayer::ZoomInAds);
 	PlayerInputComponent->BindAction("Aim",IE_Released,this,&AFpsPlayer::ZoomOutAds);
 	PlayerInputComponent->BindAction("Interact",IE_Pressed,this,&AFpsPlayer::Interact);
@@ -80,10 +81,10 @@ void AFpsPlayer::UpdateCurrentLookingInteractable()
 	
 	//ECC_GameTraceChannel1 = interactable channel
 	bool HitSuccess = GetWorld()->SweepSingleByChannel(HitResult,EndTrace,EndTrace,FQuat::Identity,ECollisionChannel::ECC_GameTraceChannel1,StructureCollision);
-	DrawDebugSphere(GetWorld(),EndTrace,40.0f,50,FColor::Orange,false);
+	//DrawDebugSphere(GetWorld(),EndTrace,40.0f,50,FColor::Orange,false);
 	if(HitSuccess)
 	{
-		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), HitResult.Location, 20.f, 12, FColor::Red, false, 10.f);
+		//UKismetSystemLibrary::DrawDebugSphere(GetWorld(), HitResult.Location, 20.f, 12, FColor::Red, false, 10.f);
 		Result = Cast<AInteractableBase>(HitResult.Actor);
 		if (Result)
 		{
@@ -250,6 +251,14 @@ void AFpsPlayer::EndCrouch()
 void AFpsPlayer::BeginJump()
 {
 	Jump();
+}
+
+void AFpsPlayer::FireHold(float Amount)
+{
+	if (Amount > 0)
+	{
+		Shoot();
+	}
 }
 
 

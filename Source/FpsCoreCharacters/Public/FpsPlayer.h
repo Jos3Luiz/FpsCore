@@ -59,6 +59,7 @@ protected:
 	FORCEINLINE void HandleMovementAxisForward(float Amount);
 	FORCEINLINE void HandleMovementAxisLookUp(float Amount);
    	FORCEINLINE void HandleMovementAxisTurn(float Amount);
+	FORCEINLINE void FireHold(float Amount);
 
 	FORCEINLINE void BeginCrouch();
 	FORCEINLINE void EndCrouch();

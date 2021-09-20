@@ -4,22 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "CollectableBase.h"
+#include "BulletDamageType.h"
+#include "AmmoTypes.h"
 #include "WeaponBase.generated.h"
 
 UCLASS(Abstract)
 class FPSCOREWEAPONS_API AWeaponBase : public ACollectableBase
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AWeaponBase();
 
 	//called when player clicks, takes care of weapon cooldown
-    virtual void Shoot(AActor* AInstigator);
-	
+	virtual void Shoot(AActor* AInstigator);
+
 	//when player reloads weapon
-    virtual void ReloadWeapon(){}
+	virtual void ReloadWeapon()
+	{
+	}
 
 	virtual bool CanReloadWeapon();
 
@@ -30,7 +34,11 @@ public:
 
 	bool IsOnCooldown();
 
-	void GetAmmoStatus(int &CurrentAmmoOut,int &CurrentStockAmmoOut);
+	void GetAmmoStatus(int& CurrentAmmoOut, int& CurrentStockAmmoOut);
+
+	UFUNCTION(BlueprintPure)
+	void GetAnimationConfigs(FName& SocketNameOut, FName& IdleMontageSectionNameOut, FName& ReloadMontageSectionNameOut,
+	                         float& AimTimeOut);
 
 	virtual void ChangeOutline(bool Val) override;
 
@@ -38,65 +46,82 @@ public:
 
 	virtual void OnAddToInventory() override;
 
-protected:
+	//Slot used on inventory
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	TEnumAsByte<EWeaponSlot> Slot;
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	USkeletalMeshComponent *Weapon;
+protected:
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float RoundsPerMinute=1200;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USkeletalMeshComponent* Weapon;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float WeaponDamage=10;
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	float FireTime = 0.0016f; //600rpm
+
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	float WeaponDamage = 10;
+
+	UPROPERTY(EditAnywhere, Category="WeaponProperties")
+	float MaxEffectiveRange = 100000;
 
 	//maximum ammo on the clip
-	UPROPERTY(EditAnywhere)
-	int MaxAmmo=1;
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	int MaxAmmo = 1;
 
 	//current ammo on the clip
-	UPROPERTY(EditAnywhere)
-	int CurrentAmmo=1;
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	int CurrentAmmo = 1;
 
 	//maximum Ammo the weapon can hold
-	UPROPERTY(EditAnywhere)
-	int MaxStockAmmo=1;
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	int MaxStockAmmo = 1;
 
 	//current ammo in the "inventory"
-	UPROPERTY(EditAnywhere)
-	int CurrentStockAmmo=1;
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	int CurrentStockAmmo = 1;
 
-	//socket expected to be used on the character.WeaponSocket by default. Change to melee socket if needed for example.
-	UPROPERTY(EditAnywhere)
+
+
+	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
+	TSubclassOf<UDamageType> WeaponDamageType = UBulletDamageType::StaticClass();
+
+	//impulse added to the character when receiving damage
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="WeaponProperties")
+	float HitImpulseAmount = 400.0f;
+
+
+	//socket expected to be used on the character. Change to melee socket if needed for example. The default is the base class name e.g. Firearm
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Animation")
 	FName SocketName;
 
+	//socket expected to be used on the character.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Animation")
+	FName IdleMontageSectionName;
 
-	
+	//socket expected to be used on the character.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Animation")
+	FName ReloadMontageSectionName;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Animation")
+	float AimTime = 0.1f;
+
 	//Use it to spawn particles on the client side
-	virtual void VisualShootLogic(AActor *AInstigator,FVector Start,FVector Direction)
-	PURE_VIRTUAL(AWeaponBase::VisualShootShoot);
+	virtual void VisualShootLogic(AActor* AInstigator, FVector Start, FVector Direction);
 
 	//use it to deal damage on the server side
-	virtual void ServerShootLogic(AActor *AInstigator,FVector Start,FVector Direction)
-	PURE_VIRTUAL(AWeaponBase::ServerShootLogic);
+	virtual void ServerShootLogic(AActor* AInstigator, FVector Start, FVector Direction);
 
-	UFUNCTION(Server,Reliable)
-	void ServerSideShoot(AActor *AInstigator,FVector Start,FVector Direction);
+	UFUNCTION(Server, Reliable)
+	void ServerSideShoot(AActor* AInstigator, FVector Start, FVector Direction);
 
-	UFUNCTION(NetMulticast,Unreliable)
-    void ClientSideShoot(AActor *AInstigator,FVector Start,FVector Direction);
+	UFUNCTION(NetMulticast, Unreliable)
+	void ClientSideShoot(AActor* AInstigator, FVector Start, FVector Direction);
 
 	//always true
 	virtual bool IsSupportedForNetworking() const override;
-	
+
 private:
 
 	void ResetCooldown();
-	
-	float FireTime;
-
-	bool IsCooldown=false;
-
-
-
-
+	bool IsCooldown = false;
 };

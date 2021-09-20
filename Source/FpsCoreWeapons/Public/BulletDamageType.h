@@ -14,3 +14,10 @@ class FPSCOREWEAPONS_API UBulletDamageType : public UDamageType
 	GENERATED_BODY()
 	
 };
+
+UCLASS()
+class FPSCOREWEAPONS_API UMeleeDamageType : public UDamageType
+{
+	GENERATED_BODY()
+	
+};

@@ -87,18 +87,22 @@ void APlayerBase::BeginReloadClientSide_Implementation()
 
 void APlayerBase::BeginReloadVisuals()
 {
-	if(!IsReloading && WeaponInventory->CanReload())
+	if(WeaponInventory->CanReload())
 	{
-		IsReloading=true;
+		
 		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Reload);
+		//add visual replication here
 	}
 }
 
 void APlayerBase::Shoot()
 {
-	WeaponInventory->Shoot();
-	//local effect only
-	OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Shoot);
+	if(WeaponInventory->Shoot())
+	{
+		//local effect only
+		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Shoot);		
+	}
+
 }
 
 void APlayerBase::ChangeCurrentWeapon(uint8 Slot)
