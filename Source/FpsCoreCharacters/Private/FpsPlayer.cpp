@@ -21,7 +21,7 @@ AFpsPlayer::AFpsPlayer()
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	FpsSkMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Block);
-	
+	bReplicates=true;
 }
 
 void AFpsPlayer::BeginPlay()
@@ -99,6 +99,7 @@ void AFpsPlayer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	UpdateCurrentLookingInteractable();
+	UpdateAimOffset();
 }
 
 void AFpsPlayer::PossessedBy(AController* NewController)
@@ -258,6 +259,25 @@ void AFpsPlayer::FireHold(float Amount)
 	if (Amount > 0)
 	{
 		Shoot();
+	}
+}
+
+
+void AFpsPlayer::UpdateAimOffset()
+{
+	AController *Controller_ref=  GetController();
+	float pitch;
+	if(Controller_ref)
+	{
+		//ranges from 0-90 and 360-270 need to convert
+		pitch = Controller_ref->GetControlRotation().Pitch;
+		if(pitch>90)
+		{
+			pitch-=360;
+		}
+		AimOffset = pitch;
+		
+		
 	}
 }
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "PlayerBase.h"
 #include "Camera/CameraComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "FpsPlayer.generated.h"
 
 /**
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UAnimBlueprint *FpsAnimBpReplace;
+
+	UPROPERTY(BlueprintReadOnly,Replicated)
+	float AimOffset;
 	
 protected:
 	virtual void PossessedBy(AController* NewController) override;
@@ -77,8 +81,19 @@ protected:
 
 	UFUNCTION()//needed because of the AddDynamic
 	void UnBindWeaponToHand(AWeaponBase* WeaponToRemove);
+
+
 	
 	
+private:
+	void UpdateAimOffset();
+
+	virtual void GetLifetimeReplicatedProps( TArray< FLifetimeProperty > & OutLifetimeProps ) const override
+	{
+		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+		DOREPLIFETIME_CONDITION( AFpsPlayer, AimOffset, COND_SkipOwner );
+	}
+
 	
 	
 	

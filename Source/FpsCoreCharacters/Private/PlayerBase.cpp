@@ -69,6 +69,7 @@ void APlayerBase::Reload()
 void APlayerBase::BeginReload()
 {
 	BeginReloadVisuals();
+	BeginReloadServerSide();
 }
 
 void APlayerBase::BeginReloadServerSide_Implementation()
@@ -87,12 +88,9 @@ void APlayerBase::BeginReloadClientSide_Implementation()
 
 void APlayerBase::BeginReloadVisuals()
 {
-	if(WeaponInventory->CanReload())
-	{
-		
+
 		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Reload);
 		//add visual replication here
-	}
 }
 
 void APlayerBase::Shoot()
