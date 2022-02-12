@@ -17,6 +17,7 @@ UENUM( BlueprintType )
 enum class EAnimEnumTransient : uint8
 {
     AET_Shoot			UMETA( DisplayName = "Shoot" ),
+	AET_DryShoot			UMETA( DisplayName = "DryShoot" ),
 	AET_Reload			UMETA( DisplayName = "Reload" ),
     AET_Max		UMETA( Hidden )
 };

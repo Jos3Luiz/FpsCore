@@ -26,7 +26,7 @@ class FPSCORECHARACTERS_API APlayerBase : public ACharacter
 
 public:
 	APlayerBase();
-
+	
 	UFUNCTION(BlueprintCallable)
     void SetCanCharacterMove(const bool Val);
 	
@@ -88,7 +88,7 @@ protected:
 
 	bool IsReloading;
 	bool IsAiming;
-	float CurrentSpeedMultiplier=0.5;
+	bool IsRunning;
 	
 private:
 

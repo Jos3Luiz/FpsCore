@@ -86,6 +86,8 @@ protected:
 	
 	
 private:
+	float CurrentSpeedMultiplier=0.4f;
+    float AimSpeedMultiplyer=1;
 	void UpdateAimOffset();
 
 	virtual void GetLifetimeReplicatedProps( TArray< FLifetimeProperty > & OutLifetimeProps ) const override

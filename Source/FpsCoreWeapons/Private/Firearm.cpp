@@ -4,6 +4,7 @@
 #include "WeaponBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "BulletDamageType.h"
+#include "Components/StaticMeshComponent.h"
 #include "AttachmentEnum.h"
 
 
@@ -13,6 +14,10 @@ AFirearm::AFirearm()
 	SocketName="Firearm";
 	IdleMontageSectionName="Firearm";
 	ReloadMontageSectionName="Firearm";
+	Magazine = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Magazine"));
+	//Magazine->SetStaticMesh(DefaultMagazine);
+	Magazine->AttachToComponent(Weapon,FAttachmentTransformRules::KeepRelativeTransform,"magazine");
+	Magazine->SetCastShadow(false);
 	
 }
 
@@ -75,8 +80,15 @@ void AFirearm::Shoot(AActor* AInstigator)
 void AFirearm::VisualShootLogic(AActor* AInstigator, FVector Start, FVector Direction)
 {
 	Super::VisualShootLogic(AInstigator, Start, Direction);
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),BulletSystem, Weapon->GetSocketLocation(TEXT("Muzzle")), Weapon->GetComponentRotation());
+	OnShoot.Broadcast(EShootType::AST_Shoot);
+	
 }
+
+void AFirearm::DryShoot()
+{
+	OnShoot.Broadcast(EShootType::AST_DryShoot);
+}
+
 
 void AFirearm::ReloadWeapon()
 {

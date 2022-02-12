@@ -41,6 +41,10 @@ bool UWeaponInventorySystem::Shoot()
 			BroadcastAmmo();
 			return true;			
 		}
+		else
+		{
+			CurrWeapon->DryShoot();
+		}
 	}
 	return false;
 	

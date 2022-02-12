@@ -6,11 +6,19 @@
 #include "WeaponBase.h"
 #include "SightAttachment.h"
 #include "AttachmentBase.h"
-#include "NiagaraFunctionLibrary.h"
-#include "Components/PointLightComponent.h"
 #include "Curves/CurveVector.h"
 #include "Firearm.generated.h"
 
+
+UENUM( BlueprintType )
+enum class EShootType : uint8
+{
+	AST_Shoot			UMETA( DisplayName = "Shoot" ),
+	AST_DryShoot			UMETA( DisplayName = "DryShoot" ),
+	AST_Max		UMETA( Hidden )
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDelegate_OnShoot, EShootType,ActionType );
 /**
  * A firearm should have the following sockets in its skeleton mesh to work properly
  * Muzzle
@@ -30,31 +38,29 @@ public:
 	UFUNCTION(BlueprintPure)
 	virtual void GetAttachmentSightDetails(FTransform &AimPosition,float &ZoomMultiplier);
 
+	
+
 protected:
 	UPROPERTY(EditDefaultsOnly,Category="WeaponProperties")
 	TSubclassOf<ASightAttachment> DefaultSight;
 
-	UPROPERTY(EditDefaultsOnly,Category="WeaponProperties")
-	UStaticMeshComponent* DefaultMagazine;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="WeaponProperties")
+	UStaticMesh *DefaultMagazine;
 	
 	UPROPERTY(EditAnywhere,Category="WeaponProperties")
 	TArray<TSubclassOf<AAttachmentBase>>AttachmentAllowedList;
 	
 	UPROPERTY(EditAnywhere,Category="WeaponProperties")
-	UNiagaraSystem *BulletSystem;
-	
-	UPROPERTY(EditAnywhere,Category="WeaponProperties")
 	UCurveVector *RecoilCurve;
-	
-	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
-	UStaticMeshComponent *PlanarReflex;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
-	UPointLightComponent *PointLight;
-
+	UPROPERTY(BlueprintReadOnly,Category="WeaponProperties")
+	UStaticMeshComponent *Magazine;
+	
 	UPROPERTY()
 	TArray<AAttachmentBase *>AttachmentRefList;
+
+	UPROPERTY(BlueprintAssignable)
+	FDelegate_OnShoot OnShoot;
 
 	UFUNCTION(Server,Reliable,BlueprintCallable)
 	void AddAttachment(TSubclassOf<AAttachmentBase> NewAttachment);
@@ -68,6 +74,8 @@ protected:
 	virtual void SetWeaponVisibility(bool Val) override;
 
 	virtual void Shoot(AActor* AInstigator) override;
+
+	virtual void DryShoot() override;
 
 	virtual bool CanReloadWeapon() override;
 

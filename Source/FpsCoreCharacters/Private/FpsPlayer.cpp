@@ -121,19 +121,25 @@ void AFpsPlayer::PossessedByClientSide_Implementation()
 
 void AFpsPlayer::SprintPressed()
 {
-	CurrentSpeedMultiplier=0.8f;
+	if(!IsAiming)
+	{
+		IsRunning=true;
+		CurrentSpeedMultiplier=1.0f;
+	}
+	
 }
 
 void AFpsPlayer::SprintReleased()
 {
-	CurrentSpeedMultiplier=0.5f;
+	IsRunning=false;
+	CurrentSpeedMultiplier=0.4f;
 }
 
 void AFpsPlayer::HandleMovementAxisRight(float Amount)
 {
 	if(GetCanCharacterMove())
 	{
-		AddMovementInput(GetActorRightVector()*Amount);
+		AddMovementInput(GetActorRightVector()*Amount*CurrentSpeedMultiplier*AimSpeedMultiplyer);
 	}
 }
 
@@ -141,7 +147,7 @@ void AFpsPlayer::HandleMovementAxisForward(float Amount)
 {
 	if(GetCanCharacterMove())
 	{
-		AddMovementInput(GetActorForwardVector()*Amount);
+		AddMovementInput(GetActorForwardVector()*Amount*CurrentSpeedMultiplier*AimSpeedMultiplyer);
 	}
 }
 
@@ -178,11 +184,16 @@ void AFpsPlayer::HandleChangeToWeaponFour()
 
 void AFpsPlayer::ZoomInAds()
 {
+	AimSpeedMultiplyer=0.5f;
+	IsAiming = true;
 	SetCurrentPose(EAnimEnumPose::AEP_AimDownSights);
+	
 }
 
 void AFpsPlayer::ZoomOutAds()
 {
+	IsAiming = false;
+	AimSpeedMultiplyer=1.0f;
 	SetCurrentPose(EAnimEnumPose::AEP_Idle);
 }
 
@@ -241,6 +252,7 @@ void AFpsPlayer::HandleMovementAxisTurn(float Amount)
 
 void AFpsPlayer::BeginCrouch()
 {
+	IsRunning=false;
 	Crouch();
 }
 

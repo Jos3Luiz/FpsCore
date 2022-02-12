@@ -4,6 +4,7 @@
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 APlayerBase::APlayerBase()
 {
@@ -88,18 +89,28 @@ void APlayerBase::BeginReloadClientSide_Implementation()
 
 void APlayerBase::BeginReloadVisuals()
 {
-
-		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Reload);
+		if(WeaponInventory->CanReload())
+		{
+			OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Reload);	
+		}
+		
 		//add visual replication here
 }
 
 void APlayerBase::Shoot()
 {
+	if(IsRunning)	return;
+	
 	if(WeaponInventory->Shoot())
 	{
 		//local effect only
 		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_Shoot);		
 	}
+	else
+	{
+		OnAnimTransientChangeEvent.Broadcast(EAnimEnumTransient::AET_DryShoot);
+	}
+	
 
 }
 
@@ -124,6 +135,8 @@ void APlayerBase::OnCurrentPoseChanged()
 {
 	OnAnimChangeEvent.Broadcast(CurrentPose);
 }
+
+
 
 
 

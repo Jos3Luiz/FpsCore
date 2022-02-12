@@ -20,10 +20,11 @@ public:
 	//called when player clicks, takes care of weapon cooldown
 	virtual void Shoot(AActor* AInstigator);
 
+	//called when player has no ammo
+	virtual void DryShoot(){}
+
 	//when player reloads weapon
-	virtual void ReloadWeapon()
-	{
-	}
+	virtual void ReloadWeapon(){}
 
 	virtual bool CanReloadWeapon();
 
@@ -45,6 +46,8 @@ public:
 	virtual void OnRemoveFromInventory() override;
 
 	virtual void OnAddToInventory() override;
+
+	
 
 	//Slot used on inventory
 	UPROPERTY(EditDefaultsOnly, Category="WeaponProperties")
