@@ -29,6 +29,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly,Replicated)
 	float AimOffset;
+
+	UPROPERTY(BlueprintReadOnly)
+	float SprintSmooth=0;
 	
 protected:
 	virtual void PossessedBy(AController* NewController) override;
@@ -81,6 +84,9 @@ protected:
 
 	UFUNCTION()//needed because of the AddDynamic
 	void UnBindWeaponToHand(AWeaponBase* WeaponToRemove);
+
+
+	
 
 
 	

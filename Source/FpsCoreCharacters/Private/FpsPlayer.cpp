@@ -7,7 +7,8 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "InteractableBase.h" 
+#include "InteractableBase.h"
+#include "Math/UnrealMathUtility.h"
 #include "Engine/World.h"
 
 AFpsPlayer::AFpsPlayer()
@@ -100,6 +101,16 @@ void AFpsPlayer::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	UpdateCurrentLookingInteractable();
 	UpdateAimOffset();
+
+	//sprint smoothing
+	if(IsRunning)
+	{
+		SprintSmooth = FMath::Clamp<float>(SprintSmooth+DeltaSeconds,0.f,1.f);
+	}
+	else
+	{
+		SprintSmooth = FMath::Clamp<float>(SprintSmooth-DeltaSeconds*5,0.f,1.f);
+	}
 }
 
 void AFpsPlayer::PossessedBy(AController* NewController)
@@ -184,6 +195,8 @@ void AFpsPlayer::HandleChangeToWeaponFour()
 
 void AFpsPlayer::ZoomInAds()
 {
+	if(IsRunning) return;
+	if(SprintSmooth>0) return;
 	AimSpeedMultiplyer=0.5f;
 	IsAiming = true;
 	SetCurrentPose(EAnimEnumPose::AEP_AimDownSights);
@@ -268,6 +281,7 @@ void AFpsPlayer::BeginJump()
 
 void AFpsPlayer::FireHold(float Amount)
 {
+	if(SprintSmooth>0) return;
 	if (Amount > 0)
 	{
 		Shoot();
